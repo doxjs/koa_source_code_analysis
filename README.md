@@ -61,7 +61,7 @@
 
 为什么这样说，这个就得追到`context.js`和`request.js`以及`response.js`的代码里面了，先等等。
 
-值得强调的是，这里的`Request`和`Response`并不是`nodejs`里面的，而是`koa`封装过后的。为了区分原生的和`koa`封装好的，我把`Request`和`Response`称为封装过后的，`request`和`response`称为原生的。
+值得强调的是，这里的`Request`和`Response`并不是`nodejs`里面的，而是`koa`封装过后的。为了区分原生的和`koa`封装好的，我把`Request`和`Response`称为封装过后的，`request`和`response`称为原生的。你需要记住的是`context.res`是指原生的`response`，而`context.response`则是封装后的`Response`。`Request`以此类推。
 
 封装的东西看起来并没有什么高大上，无非是把常用的一些方法给简化了。就像`jquery`简化了`js`对`dom`的操作一样。
 
@@ -77,7 +77,7 @@
 跳过两个关于错误处理的函数（本文不讲解错误处理），来到了`context.js`最精华的地方了。
 这里使用了`delegate`这个库。这是个啥？`delegate`其实很简单的，你甚至不需要去查看`delegate`的源代码，看我解释就行了。
 
-`delegate`提供了一种类似`Proxy`的手段，也就是代理。代理什么？具体来说`delegate(proto, 'response')`这段代码的意思就是把`proto`上的一些属性代理到`proto.response`上面去。具体是哪些代理呢？就是接下来排列工整的代码做的了。`delegate`区分了`method`，`getter`，`access`等类型。前面两个还好理解，就是方法和只读属性，第三个呢？其实就是可读可写属性罢了，相当于同时代理了`getter`和`setter`。所以其实你访问`ctx.redirect`实际上访问的是`request.redirect`，以此类推。需要注意的是，这里的`request`和`response`不是nodejs原生的，是`koa`封装过后的。
+`delegate`提供了一种类似`Proxy`的手段，也就是代理。代理什么？具体来说`delegate(proto, 'response')`这段代码的意思就是把`proto`上的一些属性代理到`proto.response`上面去。具体是哪些代理呢？就是接下来排列工整的代码做的了。`delegate`区分了`method`，`getter`，`access`等类型。前面两个还好理解，就是方法和只读属性，第三个呢？其实就是可读可写属性罢了，相当于同时代理了`getter`和`setter`。所以其实你访问`ctx.redirect`实际上访问的是`ctx.request.redirect`，以此类推。需要注意的是，这里的`request`和`response`不是nodejs原生的，是`koa`封装过后的。
 
 `context.js`就这么简单。
 
@@ -124,7 +124,7 @@
 
 接着到了`length`，这个其实就是封装了设置`Content-Length`的方法。反倒是它的getter有点儿复杂来着。我们不妨细看一下。
 
-首先判断设置`Content-Length`没有，有就直接返回，有的话那就分情况读`body`的字节数。当`body`是stream的时候，啥都不返回。
+首先判断`Content-Length`设置没有，有就直接返回，有的话那就分情况读`body`的字节数。当`body`是stream的时候，啥都不返回。
 
 这里有个奇淫巧技，`~~`这个玩意儿可以用来把字符串转换成数字。为什么呢？！我就知道你要问！其实这个东西要对js有比较高的理解才行的，js里面存在隐式类型转换，当遇到一些特殊的操作符，例如位操作符，会把字符串转换成数字来进行计算。其实`+`这个符号也可以进行字符串转数字（str+str这个不算哈，这个不会进行隐式类型转换），那么为什么要用`~~`而不是`+`呢？我思索再三，认为是作者可能不了解。但实际上，`~~`要比'+'安全，`+`在遇到不能转换的式子时，会返回NaN，而`~~`是基于位操作的，返回安全的0。
 
@@ -194,4 +194,5 @@ return Promise.resolve(fn(context, function next () {
 ## 结语
 
 `koa`的源码并不是十分复杂，有兴趣的同学可以自己再看看。希望这篇文章能给你帮助。
-推广一下自己的[GitHub](https://github.com/doxjs),
+
+推广一下自己的[GitHub](https://github.com/doxjs),我的开源项目[doxjs](https://github.com/doxjs/doxjs)，有兴趣的可以看看，给个star之类的。
